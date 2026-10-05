@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>課間我想做什麼？</title>
+<style>
+:root{color-scheme:light;--ink:#183047;--muted:#52677b;--line:#cbd7e2;--paper:#fff;--wash:#f1f6fa;--blue:#145d8d;--focus:#e5a500}
+*{box-sizing:border-box}body{margin:0;background:var(--wash);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:900px;margin:0 auto;padding:clamp(16px,4vw,36px)}header{display:flex;justify-content:space-between;align-items:start;gap:16px}h1{font-size:clamp(1.6rem,4vw,2.25rem);line-height:1.2;margin:.3rem 0}h2{font-size:1.2rem;margin:0 0 12px}.notice{color:var(--muted);margin:8px 0 20px}.card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:20px;margin:16px 0;box-shadow:0 2px 8px #1830470c}
+.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}label{font-weight:650;display:block;margin-bottom:5px}select,button{font:inherit;border:1px solid #879bad;border-radius:9px;padding:10px 12px;background:white;color:var(--ink);width:100%}button{cursor:pointer;font-weight:650}button:hover{background:#edf5fa}button:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}.actions button{width:auto;min-width:140px}.primary{background:var(--blue);border-color:var(--blue);color:white}.primary:hover{background:#0e4a73;color:white}.secondary{width:auto;min-width:100px}.result{min-height:72px;padding:14px;background:#edf5fa;border-radius:10px}.result p{margin:4px 0}.meta{color:var(--muted)}#history{padding-left:1.4rem;margin-bottom:0}#history li{padding:3px 0}.empty{color:var(--muted)}footer{color:var(--muted);font-size:.9rem;margin:18px 0 4px}
+@media(max-width:520px){main{padding:14px}.card{padding:16px}header{align-items:center}.actions{display:grid;grid-template-columns:1fr 1fr}.actions button{min-width:0;width:100%}.secondary{min-width:0}}
+</style>
+</head>
+<body>
+<main>
+<header><div><h1 data-i18n="title">課間我想做什麼？</h1><div class="notice" data-i18n="subtitle">依條件挑一個短暫休息活動。</div></div><button class="secondary" id="languageButton" type="button">English</button></header>
+<section class="card" aria-labelledby="filterHeading">
+<h2 id="filterHeading" data-i18n="filters">選擇條件</h2>
+<div class="filters">
+<div><label for="place" data-i18n="placeLabel">地點</label><select id="place"><option value="all" data-zh="不限" data-en="Any location">不限</option><option value="indoor" data-zh="室內" data-en="Indoor">室內</option><option value="outdoor" data-zh="室外" data-en="Outdoor">室外</option></select></div>
+<div><label for="minutes" data-i18n="timeLabel">可用時間</label><select id="minutes"><option value="15">15</option><option value="30" selected>30</option><option value="60">60</option></select></div>
+<div><label for="energy" data-i18n="energyLabel">活動強度</label><select id="energy"><option value="all" data-zh="不限" data-en="Any intensity">不限</option><option value="low" data-zh="低" data-en="Low">低</option><option value="medium" data-zh="中" data-en="Medium">中</option></select></div>
+</div>
+<div class="actions"><button class="primary" id="chooseButton" type="button" data-i18n="choose">幫我選</button><button id="resetButton" type="button" data-i18n="reset">重設篩選</button></div>
+</section>
+<section class="card" aria-labelledby="resultHeading"><h2 id="resultHeading" data-i18n="resultTitle">抽選結果</h2><div class="result" id="result"><p class="empty" data-i18n="prompt">選好條件後按「幫我選」。</p></div></section>
+<section class="card" aria-labelledby="historyHeading"><div class="actions" style="justify-content:space-between;align-items:center;margin:0 0 8px"><h2 id="historyHeading" data-i18n="historyTitle">最近 5 次成功抽選</h2><button class="secondary" id="clearButton" type="button" data-i18n="clear">清除紀錄</button></div><ol id="history"><li class="empty" data-i18n="historyEmpty">目前沒有紀錄。</li></ol></section>
+<footer data-i18n="disclaimer">教學模擬活動，不是校方公告。</footer>
+</main>
+<script>
+'use strict';
+const activities = [
+ {id:'A01',name_zh:'整理書包',name_en:'Organize your bag',location_type:'indoor',minutes:10,energy:'low'},
+ {id:'A02',name_zh:'畫一張小卡',name_en:'Draw a small card',location_type:'indoor',minutes:15,energy:'low'},
+ {id:'A03',name_zh:'寫三句讀書筆記',name_en:'Write three study notes',location_type:'indoor',minutes:10,energy:'low'},
+ {id:'A04',name_zh:'安靜讀兩頁書',name_en:'Read two pages quietly',location_type:'indoor',minutes:15,energy:'low'},
+ {id:'A05',name_zh:'排好明日待辦',name_en:'Plan tomorrow’s tasks',location_type:'indoor',minutes:20,energy:'low'},
+ {id:'A06',name_zh:'整理本機練習檔',name_en:'Organize practice files',location_type:'indoor',minutes:30,energy:'medium'},
+ {id:'A07',name_zh:'在合適位置慢走',name_en:'Take a gentle walk in a suitable area',location_type:'outdoor',minutes:15,energy:'low'},
+ {id:'A08',name_zh:'觀察天空並畫草圖',name_en:'Observe the sky and sketch',location_type:'outdoor',minutes:20,energy:'low'},
+ {id:'A09',name_zh:'在合適位置快走',name_en:'Take a brisk walk in a suitable area',location_type:'outdoor',minutes:30,energy:'medium'},
+ {id:'A10',name_zh:'規劃小組練習',name_en:'Plan a group exercise',location_type:'indoor',minutes:45,energy:'medium'},
+ {id:'A11',name_zh:'記錄自然色彩',name_en:'Record colors in nature',location_type:'outdoor',minutes:45,energy:'low'},
+ {id:'A12',name_zh:'構思下一次社團活動',name_en:'Brainstorm a future club activity',location_type:'indoor',minutes:60,energy:'medium'}
+];
+const copy={zh:{title:'課間我想做什麼？',subtitle:'依條件挑一個短暫休息活動。',filters:'選擇條件',placeLabel:'地點',timeLabel:'可用時間（分鐘）',energyLabel:'活動強度',choose:'幫我選',reset:'重設篩選',resultTitle:'抽選結果',prompt:'選好條件後按「幫我選」。',none:'沒有符合條件的活動',historyTitle:'最近 5 次成功抽選',clear:'清除紀錄',historyEmpty:'目前沒有紀錄。',disclaimer:'教學模擬活動，不是校方公告。',location:{indoor:'室內',outdoor:'室外'},energy:{low:'低',medium:'中'}},en:{title:'What should I do during a break?',subtitle:'Pick a short break activity that fits your time.',filters:'Choose your filters',placeLabel:'Location',timeLabel:'Available time (minutes)',energyLabel:'Energy level',choose:'Pick for me',reset:'Reset filters',resultTitle:'Your pick',prompt:'Choose filters, then select “Pick for me.”',none:'No activities match these filters',historyTitle:'Last 5 successful picks',clear:'Clear history',historyEmpty:'No picks yet.',disclaimer:'Simulated teaching activities, not a university announcement.',location:{indoor:'Indoor',outdoor:'Outdoor'},energy:{low:'Low',medium:'Medium'}}};
+let language='zh';let history=[];let current=null;
+const $=id=>document.getElementById(id);const t=key=>copy[language][key];
+function activityName(a){return a[language==='zh'?'name_zh':'name_en'];}
+function activityDetails(a){return `${a.id} · ${activityName(a)} · ${a.minutes} ${language==='zh'?'分鐘':'min'} · ${copy[language].location[a.location_type]} · ${copy[language].energy[a.energy]}`;}
+function renderResult(){const box=$('result');box.replaceChildren();if(current){const p=document.createElement('p');p.textContent=activityName(current);const details=document.createElement('p');details.className='meta';details.textContent=activityDetails(current);box.append(p,details);}else{const p=document.createElement('p');p.className='empty';p.textContent=copy[language].prompt;box.append(p);}}
+function renderHistory(){const list=$('history');list.replaceChildren();if(!history.length){const li=document.createElement('li');li.className='empty';li.textContent=copy[language].historyEmpty;list.append(li);return;}history.slice(0,5).forEach(a=>{const li=document.createElement('li');li.textContent=activityDetails(a);list.append(li);});}
+function setLanguage(){document.documentElement.lang=language==='zh'?'zh-Hant':'en';document.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=copy[language][el.dataset.i18n];});document.querySelectorAll('option[data-zh]').forEach(o=>{o.textContent=o.dataset[language];});$('languageButton').textContent=language==='zh'?'English':'中文';renderResult();renderHistory();}
+$('chooseButton').addEventListener('click',()=>{const place=$('place').value;const limit=Number($('minutes').value);const energy=$('energy').value;const matches=activities.filter(a=>(place==='all'||a.location_type===place)&&a.minutes<=limit&&(energy==='all'||a.energy===energy));if(!matches.length){current=null;$('result').textContent=copy[language].none;return;}current=matches[Math.floor(Math.random()*matches.length)];history.unshift(current);history=history.slice(0,5);renderResult();renderHistory();});
+$('resetButton').addEventListener('click',()=>{$('place').value='all';$('minutes').value='30';$('energy').value='all';});
+$('clearButton').addEventListener('click',()=>{history=[];renderHistory();});
+$('languageButton').addEventListener('click',()=>{language=language==='zh'?'en':'zh';setLanguage();});
+setLanguage();
+</script>
+</body>
+</html>
+
+
